@@ -3,6 +3,7 @@ import random
 import asyncio
 import itertools
 import requests
+import re
 
 from pprint import pprint
 from aiohttp import ClientSession
@@ -24,9 +25,10 @@ component_mapping = {
     'minute': timedelta(minutes=1)
 }
 
-TIME_THRESHOLD = -60 * 30 # time cutoff for interesting events in seconds (30 minutes)
-ALERT_TERMS = ['added a video', 'unassigned'] # What terms should trigger an alert
+TIME_THRESHOLD = -60 * 10 # time cutoff for interesting events in seconds (10 minutes)
+ALERT_TERMS = ['added a video', 'unassigned', r"endorsed.*(transcriber)"] # What terms should trigger an alert
 #ALERT_TERMS = ['added a video', 'unassigned', 'endorsed'] # What terms should trigger an alert
+ALERT_REGEX = re.compile("|".join(ALERT_TERMS))
 
 def timestring_to_minutes_delta(string):
     """ Parses e.g. 1 day, 5 hours ago as time delta"""
@@ -120,14 +122,8 @@ async def bound_fetch(sem, url, team, session):
         return await fetch_team_activities(url, team, session)
 
 
-async def main():
-
-    def term_filter(a):
-        for term in ALERT_TERMS:
-            if term in a['activity']['text']:
-                return True
-        return False
-        
+async def main():        
+    print(datetime.now())        
     tasks = []
     sem = asyncio.Semaphore(1)
 
@@ -156,7 +152,7 @@ async def main():
         pprint("Total activities before filtering: {}".format(len(activities)))
 
         # Filter by terms
-        activities = list(filter(term_filter, activities))
+        activities = list(filter(lambda a: ALERT_REGEX.search(a['activity']['text']), activities))
 
         # -timedelta(minutes=60)
         if len(activities) > 0:
