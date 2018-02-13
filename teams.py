@@ -47,8 +47,8 @@ def timestring_to_minutes_delta(string):
 async def auth_session_and_fetch_teams(session):
 
     url = "https://amara.org/en/auth/login/?next=/"
-    username = 'stew_jas';
-    password = '2YrhL5yp89PH';
+    username = '';
+    password = '';
 
     teams = []
     
